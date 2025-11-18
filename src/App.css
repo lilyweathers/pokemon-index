@@ -484,6 +484,11 @@ body {
     width: 100%;
     box-sizing: border-box;
   }
+
+  .pokemon-stats {
+    max-width: 100%;
+    width: 100%;
+  }
 }
 
 @media (min-width: 500px) {
