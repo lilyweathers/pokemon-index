@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const Pokemon = ({ index, data, loadPokemon, capitalizeFirstLetter }) => {
+const Pokemon = ({ index, data, loadPokemon }) => {
 
     const [types, setTypes] = useState([]);
     const imgUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${index + 1
@@ -27,7 +27,7 @@ const Pokemon = ({ index, data, loadPokemon, capitalizeFirstLetter }) => {
             <div className="pokemon-detail-main">
                 { }
                 <div className="pokemon-detail-header">
-                    <h2>{capitalizeFirstLetter(data.name)}</h2>
+                    <h2 className="capitalize">{data.name}</h2>
                     <img
                         className="pokemon-detail-image"
                         src={imgUrl}
@@ -44,9 +44,9 @@ const Pokemon = ({ index, data, loadPokemon, capitalizeFirstLetter }) => {
                                 type && (
                                     <span
                                         key={type}
-                                        className={`type-box type-${type.toLowerCase()}`}
+                                        className={`type-box type-${type.toLowerCase()} capitalize`}
                                     >
-                                        {capitalizeFirstLetter(type)}
+                                        {type}
                                     </span>
                                 )
                         )}
@@ -58,8 +58,8 @@ const Pokemon = ({ index, data, loadPokemon, capitalizeFirstLetter }) => {
                         <p>Abilities</p>
                         <ul>
                             {data.abilities.map((abilityInfo) => (
-                                <li key={abilityInfo.ability.name}>
-                                    {capitalizeFirstLetter(abilityInfo.ability.name)}
+                                <li className="capitalize" key={abilityInfo.ability.name}>
+                                    {abilityInfo.ability.name}
                                 </li>
                             ))}
                         </ul>
@@ -76,9 +76,7 @@ const Pokemon = ({ index, data, loadPokemon, capitalizeFirstLetter }) => {
                                 return (
                                     <div key={statInfo.stat.name} className="pokemon-stat-row">
                                         <span className="pokemon-stat-label">
-                                            {capitalizeFirstLetter(
-                                                statInfo.stat.name.replace("-", " ")
-                                            )}
+                                            {statInfo.stat.name.replace("-", " ")}
                                         </span>
 
                                         <div className="pokemon-stat-bar">
@@ -100,13 +98,13 @@ const Pokemon = ({ index, data, loadPokemon, capitalizeFirstLetter }) => {
                     <div className="pokemon-info-block">
                         <p>Other</p>
                         <p>Base Experience: {data.base_experience}</p>
-                        <p>Species: {capitalizeFirstLetter(data.species.name)}</p>
+                        <p>Species: {data.species.name}</p>
                         <p>Held Items:</p>
                         <div className="held-items-list">
                             {data.held_items.length > 0 ? (
                                 data.held_items.map((heldItem) => (
-                                    <span key={heldItem.item.name} className="held-item-badge">
-                                        {capitalizeFirstLetter(heldItem.item.name)}
+                                    <span key={heldItem.item.name} className="held-item-badge capitalize">
+                                        {heldItem.item.name}
                                     </span>
                                 ))
                             ) : (

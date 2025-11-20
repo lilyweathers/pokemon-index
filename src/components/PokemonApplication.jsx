@@ -27,10 +27,6 @@ const PokemonApplication = () => {
 
     }, [loadPokemon]);
 
-    function capitalizeFirstLetter(val) {
-        return String(val).charAt(0).toUpperCase() + String(val).slice(1);
-    }
-
     async function loadPokemon(index) {
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${index + 1}`);
         const json = await response.json();
@@ -49,7 +45,7 @@ const PokemonApplication = () => {
         <div className="app-page">
             {showPokemon && loadedPokemon && (
                 <div className="pokemon-detail-section">
-                    <Pokemon index={index} data={loadedPokemon} loadPokemon={loadPokemon} capitalizeFirstLetter={capitalizeFirstLetter} />
+                    <Pokemon index={index} data={loadedPokemon} loadPokemon={loadPokemon}/>
                     <button className="back-button" onClick={goBack}>
                         Back to list
                     </button>
@@ -75,8 +71,8 @@ const PokemonApplication = () => {
                                 Select a Pokémon
                             </option>
                             {pokemons.map((pokemon, i) => (
-                                <option key={i} value={i}>
-                                    {capitalizeFirstLetter(pokemon.name)}
+                                <option className="capitalize" key={i} value={i}>
+                                    {pokemon.name}
                                 </option>
                             ))}
                         </select>

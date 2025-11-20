@@ -422,6 +422,10 @@ body {
   color: #0f172a;
 }
 
+.capitalize, .pokemon-stat-label, .pokemon-info-block {
+  text-transform: capitalize;
+}
+
 @media (max-width: 1080px) {
   #root {
     padding: 1rem;
