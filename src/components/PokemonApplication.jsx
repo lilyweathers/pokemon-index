@@ -9,19 +9,16 @@ const PokemonApplication = () => {
     const [showPokemons, setShowPokemons] = useState(true);
     const [index, setIndex] = useState(0);
 
-    // NEW: search / filter / sort state
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
     const [sortOption, setSortOption] = useState("id-asc");
 
-    // Load full details for the first 151 Pokémon
     useEffect(() => {
         const loadPokemons = async () => {
             const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
             const json = await response.json();
             const results = Array.isArray(json.results) ? json.results : [json.results];
 
-            // Fetch full data for each Pokémon
             const detailed = await Promise.all(
                 results.map((result) =>
                     fetch(result.url).then((res) => res.json())
@@ -34,20 +31,16 @@ const PokemonApplication = () => {
         loadPokemons();
     }, []);
 
-    // Helper: get single stat by name
     const getBaseStat = (pokemon, statName) => {
         if (!pokemon?.stats) return 0;
         const stat = pokemon.stats.find((s) => s.stat.name === statName);
         return stat ? stat.base_stat : 0;
     };
-
-    // Helper: get total stats
     const getTotalStats = (pokemon) => {
         if (!pokemon?.stats) return 0;
         return pokemon.stats.reduce((sum, s) => sum + s.base_stat, 0);
     };
 
-    // All available types (for type filter dropdown)
     const allTypes = Array.from(
         new Set(
             pokemons.flatMap((p) =>
@@ -56,7 +49,6 @@ const PokemonApplication = () => {
         )
     ).sort();
 
-    // Filter by search + type
     const filteredPokemons = pokemons.filter((pokemon) => {
         const matchesSearch = pokemon.name
             .toLowerCase()
@@ -70,7 +62,6 @@ const PokemonApplication = () => {
         return matchesSearch && matchesType;
     });
 
-    // Sort according to selected option
     const sortedPokemons = [...filteredPokemons].sort((a, b) => {
         switch (sortOption) {
             case "id-desc":
@@ -93,12 +84,10 @@ const PokemonApplication = () => {
         }
     });
 
-    // Optional: reset pagination when filters/sort change
     useEffect(() => {
         setVisibleCount(12);
     }, [searchTerm, typeFilter, sortOption]);
 
-    // Open detail view for a Pokémon
     function loadPokemon(pokemon) {
         if (!pokemon) return;
         setIndex(pokemon.id - 1);
@@ -128,7 +117,6 @@ const PokemonApplication = () => {
                     <div className="pokemon-top-bar">
                         <h2 className="section-title">Pokédex (1–151)</h2>
 
-                        {/* NEW: search + type filter + sort */}
                         <div className="pokemon-filters">
                             <input
                                 type="text"
@@ -167,7 +155,6 @@ const PokemonApplication = () => {
                             </select>
                         </div>
 
-                        {/* Existing quick-jump dropdown (now using Pokémon IDs) */}
                         <select
                             className="pokemon-select"
                             defaultValue=""
