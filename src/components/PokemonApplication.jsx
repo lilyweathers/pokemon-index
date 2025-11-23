@@ -9,29 +9,100 @@ const PokemonApplication = () => {
     const [showPokemons, setShowPokemons] = useState(true);
     const [index, setIndex] = useState(0);
 
+    // NEW: search / filter / sort state
+    const [searchTerm, setSearchTerm] = useState("");
+    const [typeFilter, setTypeFilter] = useState("all");
+    const [sortOption, setSortOption] = useState("id-asc");
 
+    // Load full details for the first 151 Pokémon
     useEffect(() => {
         const loadPokemons = async () => {
-            let response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
-            let json = await response.json();
-            const normalized = Array.isArray(json.results)
-                ? json.results
-                : [json.results];
-            setPokemons(normalized);
+            const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
+            const json = await response.json();
+            const results = Array.isArray(json.results) ? json.results : [json.results];
+
+            // Fetch full data for each Pokémon
+            const detailed = await Promise.all(
+                results.map((result) =>
+                    fetch(result.url).then((res) => res.json())
+                )
+            );
+
+            setPokemons(detailed);
         };
 
         loadPokemons();
     }, []);
 
+    // Helper: get single stat by name
+    const getBaseStat = (pokemon, statName) => {
+        if (!pokemon?.stats) return 0;
+        const stat = pokemon.stats.find((s) => s.stat.name === statName);
+        return stat ? stat.base_stat : 0;
+    };
+
+    // Helper: get total stats
+    const getTotalStats = (pokemon) => {
+        if (!pokemon?.stats) return 0;
+        return pokemon.stats.reduce((sum, s) => sum + s.base_stat, 0);
+    };
+
+    // All available types (for type filter dropdown)
+    const allTypes = Array.from(
+        new Set(
+            pokemons.flatMap((p) =>
+                p.types ? p.types.map((t) => t.type.name) : []
+            )
+        )
+    ).sort();
+
+    // Filter by search + type
+    const filteredPokemons = pokemons.filter((pokemon) => {
+        const matchesSearch = pokemon.name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
+
+        const matchesType =
+            typeFilter === "all" ||
+            (pokemon.types &&
+                pokemon.types.some((t) => t.type.name === typeFilter));
+
+        return matchesSearch && matchesType;
+    });
+
+    // Sort according to selected option
+    const sortedPokemons = [...filteredPokemons].sort((a, b) => {
+        switch (sortOption) {
+            case "id-desc":
+                return b.id - a.id;
+            case "name-asc":
+                return a.name.localeCompare(b.name);
+            case "name-desc":
+                return b.name.localeCompare(a.name);
+            case "hp-desc":
+                return getBaseStat(b, "hp") - getBaseStat(a, "hp");
+            case "attack-desc":
+                return getBaseStat(b, "attack") - getBaseStat(a, "attack");
+            case "defense-desc":
+                return getBaseStat(b, "defense") - getBaseStat(a, "defense");
+            case "total-desc":
+                return getTotalStats(b) - getTotalStats(a);
+            case "id-asc":
+            default:
+                return a.id - b.id;
+        }
+    });
+
+    // Optional: reset pagination when filters/sort change
     useEffect(() => {
+        setVisibleCount(12);
+    }, [searchTerm, typeFilter, sortOption]);
 
-    }, [loadPokemon]);
-
-    async function loadPokemon(index) {
-        const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${index + 1}`);
-        const json = await response.json();
-        setIndex(index);
-        setLoadedPokemon(json);
+    // Open detail view for a Pokémon
+    function loadPokemon(pokemon) {
+        if (!pokemon) return;
+        setIndex(pokemon.id - 1);
+        setLoadedPokemon(pokemon);
         setShowPokemon(true);
         setShowPokemons(false);
     }
@@ -45,7 +116,7 @@ const PokemonApplication = () => {
         <div className="app-page">
             {showPokemon && loadedPokemon && (
                 <div className="pokemon-detail-section">
-                    <Pokemon index={index} data={loadedPokemon} loadPokemon={loadPokemon}/>
+                    <Pokemon index={index} data={loadedPokemon} loadPokemon={loadPokemon} />
                     <button className="back-button" onClick={goBack}>
                         Back to list
                     </button>
@@ -57,55 +128,103 @@ const PokemonApplication = () => {
                     <div className="pokemon-top-bar">
                         <h2 className="section-title">Pokédex (1–151)</h2>
 
+                        {/* NEW: search + type filter + sort */}
+                        <div className="pokemon-filters">
+                            <input
+                                type="text"
+                                className="pokemon-search-input"
+                                placeholder="Search by name…"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+
+                            <select
+                                className="pokemon-type-select"
+                                value={typeFilter}
+                                onChange={(e) => setTypeFilter(e.target.value)}
+                            >
+                                <option value="all">All types</option>
+                                {allTypes.map((type) => (
+                                    <option key={type} value={type}>
+                                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                className="pokemon-sort-select"
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value)}
+                            >
+                                <option value="id-asc">ID ↑ (1–151)</option>
+                                <option value="id-desc">ID ↓ (151–1)</option>
+                                <option value="name-asc">Name A–Z</option>
+                                <option value="name-desc">Name Z–A</option>
+                                <option value="hp-desc">HP (high → low)</option>
+                                <option value="attack-desc">Attack (high → low)</option>
+                                <option value="defense-desc">Defense (high → low)</option>
+                                <option value="total-desc">Total stats (high → low)</option>
+                            </select>
+                        </div>
+
+                        {/* Existing quick-jump dropdown (now using Pokémon IDs) */}
                         <select
                             className="pokemon-select"
                             defaultValue=""
                             onChange={(e) => {
-                                const selectedIndex = Number(e.target.value);
-                                if (!Number.isNaN(selectedIndex)) {
-                                    loadPokemon(selectedIndex);
+                                const id = Number(e.target.value);
+                                if (!Number.isNaN(id)) {
+                                    const selected = pokemons.find((p) => p.id === id);
+                                    if (selected) {
+                                        loadPokemon(selected);
+                                    }
                                 }
                             }}
                         >
                             <option value="" disabled>
                                 Select a Pokémon
                             </option>
-                            {pokemons.map((pokemon, i) => (
-                                <option className="capitalize" key={i} value={i}>
-                                    {pokemon.name}
-                                </option>
-                            ))}
+                            {pokemons
+                                .slice()
+                                .sort((a, b) => a.id - b.id)
+                                .map((pokemon) => (
+                                    <option className="capitalize" key={pokemon.id} value={pokemon.id}>
+                                        {pokemon.name}
+                                    </option>
+                                ))}
                         </select>
                     </div>
 
-                    { }
-                    <div id="pokemons" className="pokemon-grid">
-                        {pokemons.slice(0, visibleCount).map((pokemon, index) => (
+                    <div className="pokemon-grid">
+                        {sortedPokemons.slice(0, visibleCount).map((pokemon) => (
                             <div
-                                key={index}
+                                key={pokemon.id}
                                 className="pokemon-card"
-                                onClick={() => loadPokemon(index)}
+                                onClick={() => loadPokemon(pokemon)}
                             >
                                 <h2>{pokemon.name}</h2>
                                 <img
-                                    src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${index + 1}.png`}
+                                    src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
                                     alt={pokemon.name}
                                 />
                             </div>
                         ))}
                     </div>
-                    {pokemons.length > visibleCount && (
-                            <div className="load-more-wrapper">
-                                <button
-                                    className="load-more-button"
-                                    onClick={() =>
-                                        setVisibleCount((prev) => Math.min(prev + 12, pokemons.length))
-                                    }
-                                >
-                                    Load more
-                                </button>
-                            </div>
-                        )}
+
+                    {sortedPokemons.length > visibleCount && (
+                        <div className="load-more-wrapper">
+                            <button
+                                className="load-more-button"
+                                onClick={() =>
+                                    setVisibleCount((prev) =>
+                                        Math.min(prev + 12, sortedPokemons.length)
+                                    )
+                                }
+                            >
+                                Load more
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

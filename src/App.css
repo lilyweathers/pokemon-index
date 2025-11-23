@@ -23,6 +23,7 @@ body {
   background-repeat: no-repeat;
   background-position: center;
   background-attachment: fixed;
+  max-width: 100%;
 }
 
 #root {
@@ -424,6 +425,26 @@ body {
 
 .capitalize, .pokemon-stat-label, .pokemon-info-block {
   text-transform: capitalize;
+}
+
+.pokemon-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pokemon-search-input,
+.pokemon-type-select,
+.pokemon-sort-select {
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid #cbd5f5;
+  color: black;
+  background-color: rgba(255, 255, 255, 0.9);
+  outline: none;
+  font-size: 0.95rem;
+  cursor: pointer;
 }
 
 @media (max-width: 1080px) {
